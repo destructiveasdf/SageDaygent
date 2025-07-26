@@ -2,6 +2,16 @@ const form = document.getElementById('todo-form');
 const input = document.getElementById('todo-input');
 const list = document.getElementById('todo-list');
 const refreshBtn = document.getElementById('refresh-todos');
+const loadingOverlay = document.getElementById('loading-overlay');
+
+// Loading functions
+function showLoading() {
+  loadingOverlay.classList.add('show');
+}
+
+function hideLoading() {
+  loadingOverlay.classList.remove('show');
+}
 
 function renderTodos(todos) {
   list.innerHTML = '';
@@ -100,9 +110,14 @@ function loadTodos() {
 
 // Refresh todos by fetching from backend and saving locally
 async function refreshTodos() {
-  const newTodos = await fetchTasksFromBackend();
-  saveTodos(newTodos);
-  renderTodos(newTodos);
+  showLoading();
+  try {
+    const newTodos = await fetchTasksFromBackend();
+    saveTodos(newTodos);
+    renderTodos(newTodos);
+  } finally {
+    hideLoading();
+  }
 }
 
 form.addEventListener('submit', (e) => {

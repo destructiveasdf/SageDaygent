@@ -54,9 +54,15 @@ def get_email_body(message):
             return decode_base64(body_data)
     return ""
 
-def fetch_gmail_emails(creds, max_results=5):
+def fetch_gmail_emails(creds, max_results=50):
     service = build('gmail', 'v1', credentials=creds)
-    results = service.users().messages().list(userId='me', maxResults=max_results).execute()
+    
+    # Fetch unread messages specifically
+    results = service.users().messages().list(
+        userId='me', 
+        labelIds=['UNREAD'],
+        maxResults=max_results
+    ).execute()
     messages = results.get('messages', [])
 
     emails = []
@@ -64,9 +70,13 @@ def fetch_gmail_emails(creds, max_results=5):
         msg_data = service.users().messages().get(userId='me', id=msg['id']).execute()
         headers = msg_data['payload'].get('headers', [])
         subject = next((h['value'] for h in headers if h['name'] == 'Subject'), '(No Subject)')
+        sender = next((h['value'] for h in headers if h['name'] == 'From'), '(Unknown Sender)')
         body = get_email_body(msg_data)
-        snippet = (body[:500] + '...') if len(body) > 500 else body
-        emails.append(f"Subject: {subject}\nBody: {snippet}")
+        
+        # Include more context for better summarization
+        email_content = f"From: {sender}\nSubject: {subject}\nBody: {body}"
+        emails.append(email_content)
+    
     return emails
 
 def fetch_calendar_events(creds, max_results=5):
@@ -103,16 +113,52 @@ def todos():
     calendar_events = fetch_calendar_events(creds)
 
     combined_text = "\n".join(
-        ["Emails:"] + emails + ["", "Calendar Events:"] + calendar_events + ["", "Generate a concise to-do list as a JSON array of tasks, each task a string."]
+        ["Unread Emails:"] + emails + ["", "Calendar Events:"] + calendar_events + ["", 
+         "First, provide a brief summary of the key points from the unread emails above. " +
+         "Then, based on both the email summary and calendar events, generate a concise to-do list. " +
+         "Return ONLY a valid JSON array of strings, where each string is a single task. " +
+         "Example format: [\"Task 1\", \"Task 2\", \"Task 3\"]. " +
+         "Do not include any other text, just the JSON array."]
     )
 
     todo_text = generate_todo_list(combined_text)
 
     try:
+        # Clean the response to extract just the JSON array
+        todo_text = todo_text.strip()
+        
+        # Remove any markdown code blocks if present
+        if todo_text.startswith('```json'):
+            todo_text = todo_text[7:]
+        if todo_text.startswith('```'):
+            todo_text = todo_text[3:]
+        if todo_text.endswith('```'):
+            todo_text = todo_text[:-3]
+        
+        todo_text = todo_text.strip()
+        
+        # Parse the JSON
         tasks = json.loads(todo_text)
+        
+        # Ensure it's a list of strings
+        if isinstance(tasks, list):
+            tasks = [str(task).strip() for task in tasks if task and str(task).strip()]
+        else:
+            tasks = []
+            
     except Exception as e:
         print(f"JSON parse error: {e}")
-        tasks = [task.strip() for task in todo_text.split('\n') if task.strip()]
+        print(f"Raw response: {todo_text}")
+        # Fallback: split by newlines and clean up
+        tasks = []
+        for line in todo_text.split('\n'):
+            line = line.strip()
+            if line and not line.startswith('[') and not line.startswith(']') and not line.startswith('{') and not line.startswith('}'):
+                # Remove quotes and commas if present
+                line = line.strip('"\'')
+                line = line.rstrip(',')
+                if line:
+                    tasks.append(line)
 
     return jsonify(tasks)
 
