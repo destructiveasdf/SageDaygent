@@ -1,0 +1,15 @@
+llama-index
+openai
+pandas
+python-dotenv
+asyncio
+argparse
+cohere
+jupyter
+llama-index-llms-openai
+llama-index-embeddings-openai
+llama-index-eval
+flask
+google-generativeai
+google-auth-oauthlib
+google-api-python-client 

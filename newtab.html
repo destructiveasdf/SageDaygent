@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My To-Do List</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* Simple styling to keep input and button side by side */
+      #todo-form {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+      #todo-input {
+        flex-grow: 1;
+        padding: 8px;
+        font-size: 16px;
+      }
+      #refresh-todos {
+        padding: 8px 16px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>To-Do List</h1>
+      <form id="todo-form">
+        <input
+          type="text"
+          id="todo-input"
+          placeholder="Add a task..."
+          autocomplete="off"
+        />
+        <button id="refresh-todos" type="button">Fetch Tasks</button>
+      </form>
+      <ul id="todo-list"></ul>
+    </main>
+    <script src="script.js"></script>
+  </body>
+</html>

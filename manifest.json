@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "Minimalist To-Do Homepage",
+  "version": "1.0",
+  "description": "Replaces the new tab page with a minimalist to-do list.",
+  "chrome_url_overrides": {
+    "newtab": "newtab.html"
+  },
+  "permissions": ["storage"]
+}
